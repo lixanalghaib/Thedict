@@ -17,6 +17,7 @@ Welcome to **TheDict**, a beginner-friendly thesaurus project built with HTML! W
 ## Demo
 
 Check out the live demo of **TheDict** [here](#) (add your live demo link when available).
+https://lixanalghaib.github.io/Thedict/
 
 ---
 
