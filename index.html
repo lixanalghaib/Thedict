@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thesaurus and Dictionary</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .search-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 80%;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+    .search-input {
+      flex-grow: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 50px;
+      outline: none;
+      color: #333;
+      transition: border-color 0.3s;
+    }
+    .search-input:focus {
+      border-color: #3498db;
+    }
+    .clear-button {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background-color: #f5f5f5;
+      border: none;
+      border-radius: 50%;
+      color: #888;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .clear-button:hover {
+      background-color: #e0e0e0;
+      color: #555;
+    }
+    .results-container {
+      margin-top: 120px; /* Adjust margin to accommodate fixed search bar */
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      max-height: 70vh; /* Adjust height considering search bar and other margins */
+      overflow-y: auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .results-heading {
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: #2c3e50;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .results-table th, .results-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    .results-table th {
+      background-color: #f9f9f9;
+      font-weight: bold;
+    }
+    .results-table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .no-results {
+      margin-top: 20px;
+      color: #888;
+      font-style: italic;
+    }
+    .error-message {
+      color: #e74c3c;
+      margin-top: 20px;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 20px;
+      }
+      .search-container {
+        max-width: 95%;
+      }
+      .results-container {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Thesaurus and Dictionary</h1>
+  <div class="search-container">
+    <input type="text" id="searchWord" class="search-input" placeholder="Search..." autofocus>
+    <button id="clearButton" class="clear-button">✕</button>
+  </div>
+  <div class="results-container">
+    <h2 id="resultsHeading"></h2>
+    <table id="resultsTable" class="results-table">
+      <thead>
+        <tr>
+          <th>Result</th>
+          <th>Definition</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="noResults" class="no-results"></p>
+    <p id="errorMessage" class="error-message"></p>
+  </div>
+  <script>
+    const searchInput = document.getElementById("searchWord");
+    const clearButton = document.getElementById("clearButton");
+    const resultsHeading = document.getElementById("resultsHeading");
+    const resultsTable = document.getElementById("resultsTable").getElementsByTagName('tbody')[0];
+    const noResults = document.getElementById("noResults");
+    const errorMessage = document.getElementById("errorMessage");
+    const API_BASE_URL = "https://api.datamuse.com/words";
+
+    const colors = ["#fff7e6", "#e6f7ff", "#f7e6ff", "#e6fff7", "#f7ffe6"];
+
+    searchInput.addEventListener("input", function() {
+      handleInput(this.value);
+    });
+
+    clearButton.addEventListener("click", function() {
+      clearSearchInput();
+    });
+
+    function handleInput(value) {
+      if (value.length > 0) {
+        clearButton.style.display = "flex";
+        searchWord(value);
+      } else {
+        clearButton.style.display = "none";
+        clearResults();
+      }
+    }
+
+    function searchWord(word) {
+      clearResults();
+      resultsHeading.textContent = "Searching...";
+      resultsTable.innerHTML = "";
+      noResults.textContent = "";
+      errorMessage.textContent = "";
+
+      fetch(API_BASE_URL + "?rel_syn=" + word + "&md=d")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("An error occurred while fetching data.");
+          }
+          return response.json();
+        })
+        .then(data => {
+          const synonyms = data.map(item => item.word);
+          const definitions = data.map(item => item.defs ? item.defs[0] : "");
+
+          displayResults(word, synonyms, definitions);
+        })
+        .catch(error => {
+          displayError(error.message);
+        });
+    }
+
+    function displayResults(word, synonyms, definitions) {
+      resultsHeading.textContent = "Results for: " + word;
+
+      if (synonyms.length > 0 || definitions.length > 0) {
+        synonyms.forEach((synonym, index) => {
+          const row = resultsTable.insertRow();
+          row.style.backgroundColor = colors[index % colors.length];
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          cell1.textContent = synonym;
+          cell2.textContent = definitions[index] || "";
+        });
+      } else {
+        noResults.textContent = "No results found.";
+      }
+    }
+
+    function displayError(message) {
+      clearResults();
+      errorMessage.textContent = "An error occurred: " + message;
+    }
+
+    function clearResults() {
+      resultsHeading.textContent = "";
+      resultsTable.innerHTML = "";
+      noResults.textContent = "";
+      errorMessage.textContent = "";
+    }
+
+    function clearSearchInput() {
+      searchInput.value = "";
+      searchInput.blur(); // Hide keyboard on mobile
+      clearButton.style.display = "none";
+      clearResults();
+    }
+  </script>
+  <footer>
+    <p><a href="https://lixhanalghaib.github.io/thedict/" style="color: #3498db;">Contribute to this project</a></p>
+  </footer>
+</body>
+</html>
