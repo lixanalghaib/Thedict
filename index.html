@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thesaurus and Dictionary</title>
+  <title>Easy and simple thesaurus implementation</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
   <style>
     body {
@@ -147,8 +147,13 @@
     const noResults = document.getElementById("noResults");
     const errorMessage = document.getElementById("errorMessage");
     const API_BASE_URL = "https://api.datamuse.com/words";
-
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
     const colors = ["#fff7e6", "#e6f7ff", "#f7e6ff", "#e6fff7", "#f7ffe6"];
+
+    if(urlParams.has('sw')) {
+      handleInput(urlParams.get('sw'));
+    }
 
     searchInput.addEventListener("input", function() {
       handleInput(this.value);
@@ -175,6 +180,8 @@
       noResults.textContent = "";
       errorMessage.textContent = "";
 
+      // limit of api is 100.000 request per day
+      // also private tabs in chromium based browsers implementations dont allows api calls
       fetch(API_BASE_URL + "?rel_syn=" + word + "&md=d")
         .then(response => {
           if (!response.ok) {

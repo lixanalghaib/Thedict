@@ -12,10 +12,11 @@ Its an easy implementatrion of [Datamuse api](https://www.datamuse.com/api/), a 
 - **Beginner-Friendly Code**: Perfect for those learning HTML and web development.
 - **Customizable**: Modify and extend the code to suit your needs.
 - **Open for Non-Commercial Use**: IT has the limits of the Datamuse API only, 100000 request per day!
+- **Parsing words at the URL**: you can parse `?ws=` following with the word to parse!
 
 ## Demo
 
-Check out the live demo of [**TheDict** here](https://lixanalghaib.github.io/Thedict/index.html)
+Check out the live demo of [**TheDict** here](https://lixanalghaib.github.io/Thedict/index.html?sw=thesaurus)
 
 ## Getting Started
 
