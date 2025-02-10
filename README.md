@@ -69,7 +69,7 @@ This project is licensed under the **MIT License with Commons Clause**. See the 
 If you find **TheDict** helpful or have suggestions for improvement, please let us know! You can:
 
 - 🌟 Star this repository to show your support.
-- 📧 Email **uzeirselot2021 at gmail dot com** for feedback or questions.
+- 📧 Email **uzeirselot2021@gmail.com** for feedback or questions.
 - 🐛 Report bugs or request features by opening an issue.
 
 
