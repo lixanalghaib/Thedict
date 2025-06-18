@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thedict – Thesaurus and Dictionary</title>
+  <!-- SEO & Social -->
+  <meta name="description" content="A simple, fast, and accessible thesaurus and dictionary web app.">
+  <meta property="og:title" content="Thedict – Thesaurus and Dictionary">
+  <meta property="og:description" content="A simple web-based thesaurus and dictionary built with HTML and JavaScript.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    h1 {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .search-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 90%;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 10px;
+      position: fixed;
+      top: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+    .search-input {
+      flex-grow: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 50px;
+      outline: none;
+      color: #333;
+      transition: border-color 0.3s;
+    }
+    .search-input:focus {
+      border-color: #3498db;
+    }
+    .clear-button, .toggle-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background-color: #f5f5f5;
+      border: none;
+      border-radius: 50%;
+      color: #888;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background-color 0.3s, color 0.3s;
+      font-size: 16px;
+    }
+    .clear-button[hidden] { display: none; }
+    .clear-button:hover, .toggle-button:hover {
+      background-color: #e0e0e0;
+      color: #555;
+    }
+    .toggle-button {
+      border-radius: 20px;
+      width: auto;
+      padding: 0 12px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .results-container {
+      margin-top: 120px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: background 0.3s, color 0.3s;
+    }
+    .results-heading {
+      font-weight: bold;
+      margin-bottom: 20px;
+      font-size: 22px;
+      color: #2c3e50;
+    }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .results-table th, .results-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: left;
+    }
+    .results-table th {
+      background-color: #f9f9f9;
+      font-weight: bold;
+    }
+    .results-table tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #3498db;
+      font-size: 16px;
+      margin-left: 6px;
+    }
+    .copy-btn:active {
+      color: #217dbb;
+    }
+    .no-results, .error-message, .loading-message {
+      margin-top: 20px;
+      color: #888;
+      font-style: italic;
+    }
+    .error-message { color: #e74c3c; font-style: normal; }
+    @media (max-width: 600px) {
+      h1 { font-size: 20px; }
+      .search-container { max-width: 99%; }
+      .results-container { padding: 10px; }
+      .results-table th, .results-table td { padding: 8px; }
+    }
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      body { background: #181a1b; color: #e0e0e0; }
+      .search-container, .results-container { background: #23272a; color: #e0e0e0; }
+      .results-table th, .results-table td { border-color: #444; }
+      .results-table th { background: #222; }
+      .results-table tr:nth-child(even) { background: #181a1b; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Thedict: Thesaurus and Dictionary</h1>
+  <div class="search-container">
+    <input
+      type="text"
+      id="searchWord"
+      class="search-input"
+      placeholder="Search for a word..."
+      aria-label="Search thesaurus"
+      autofocus
+    >
+    <button id="clearButton" class="clear-button" aria-label="Clear search" hidden>✕</button>
+    <button id="toggleButton" class="toggle-button" aria-label="Switch search mode">Synonyms</button>
+  </div>
+  <div class="results-container">
+    <h2 id="resultsHeading" class="results-heading"></h2>
+    <div id="loadingMessage" class="loading-message"></div>
+    <table id="resultsTable" class="results-table" aria-live="polite">
+      <thead>
+        <tr>
+          <th>Result</th>
+          <th>Definition</th>
+          <th>Copy</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="noResults" class="no-results"></p>
+    <p id="errorMessage" class="error-message"></p>
+  </div>
+  <script>
+    // === SETUP ===
+    const searchInput = document.getElementById("searchWord");
+    const clearButton = document.getElementById("clearButton");
+    const toggleButton = document.getElementById("toggleButton");
+    const resultsHeading = document.getElementById("resultsHeading");
+    const resultsTable = document.getElementById("resultsTable").getElementsByTagName('tbody')[0];
+    const noResults = document.getElementById("noResults");
+    const errorMessage = document.getElementById("errorMessage");
+    const loadingMessage = document.getElementById("loadingMessage");
+    const API_BASE_URL = "https://api.datamuse.com/words";
+    const colors = ["#fff7e6", "#e6f7ff", "#f7e6ff", "#e6fff7", "#f7ffe6"];
+    const MODES = [
+      { name: "Synonyms", param: "rel_syn", aria: "Show synonyms" },
+      { name: "Antonyms", param: "rel_ant", aria: "Show antonyms" },
+      { name: "Definitions", param: "sp", aria: "Show definitions only" }
+    ];
+    let modeIndex = 0; // Start with Synonyms
+
+    // === ACCESSIBILITY & UX ===
+    searchInput.setAttribute('aria-label', 'Search thesaurus or dictionary');
+    clearButton.setAttribute('tabindex', '0');
+    toggleButton.setAttribute('tabindex', '0');
+
+    // === EVENT LISTENERS ===
+    let debounceTimeout;
+    searchInput.addEventListener("input", function() {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => handleInput(this.value), 300);
+    });
+    searchInput.addEventListener("keydown", function(e) {
+      if (e.key === "Escape") clearSearchInput();
+    });
+    clearButton.addEventListener("click", clearSearchInput);
+    clearButton.addEventListener("keydown", function(e) {
+      if (e.key === "Enter" || e.key === " ") clearSearchInput();
+    });
+    toggleButton.addEventListener("click", toggleMode);
+
+    // === MAIN LOGIC ===
+    function handleInput(value) {
+      if (value.length > 0) {
+        clearButton.hidden = false;
+        searchWord(value);
+      } else {
+        clearButton.hidden = true;
+        clearResults();
+      }
+    }
+
+    function toggleMode() {
+      modeIndex = (modeIndex + 1) % MODES.length;
+      toggleButton.textContent = MODES[modeIndex].name;
+      toggleButton.setAttribute("aria-label", MODES[modeIndex].aria);
+      if (searchInput.value.trim()) handleInput(searchInput.value);
+    }
+
+    // Caching
+    function getCacheKey(word, mode) {
+      return `dict_${MODES[mode].name}_${word.toLowerCase()}`;
+    }
+
+    async function searchWord(word) {
+      clearResults();
+      loadingMessage.textContent = "Loading...";
+      const mode = MODES[modeIndex];
+      let cacheKey = getCacheKey(word, modeIndex);
+      let cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        let {results, definitions} = JSON.parse(cached);
+        displayResults(word, results, definitions);
+        loadingMessage.textContent = "";
+        return;
+      }
+      try {
+        let apiUrl;
+        if (mode.name === "Definitions") {
+          apiUrl = `${API_BASE_URL}?sp=${encodeURIComponent(word)}&md=d`;
+        } else {
+          apiUrl = `${API_BASE_URL}?${mode.param}=${encodeURIComponent(word)}&md=d`;
+        }
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Network error. Please try again.");
+        const data = await response.json();
+        let results, definitions;
+        if (mode.name === "Definitions") {
+          results = data.map(item => item.word);
+          definitions = data.map(item => item.defs ? item.defs[0] : "");
+        } else {
+          results = data.map(item => item.word);
+          definitions = data.map(item => item.defs ? item.defs[0] : "");
+          // If no results for synonym mode, try definition as backup
+          if (results.length === 0 && mode.name === "Synonyms") {
+            return searchWordAsDefinition(word);
+          }
+        }
+        localStorage.setItem(cacheKey, JSON.stringify({results, definitions}));
+        displayResults(word, results, definitions);
+      } catch (error) {
+        displayError(error.message);
+      }
+      loadingMessage.textContent = "";
+    }
+
+    // If no synonym found, fallback to definitions only
+    async function searchWordAsDefinition(word) {
+      loadingMessage.textContent = "No synonyms found. Searching for definitions...";
+      const response = await fetch(`${API_BASE_URL}?sp=${encodeURIComponent(word)}&md=d`);
+      if (!response.ok) {
+        displayError("Error fetching definitions.");
+        return;
+      }
+      const data = await response.json();
+      const results = data.map(item => item.word);
+      const definitions = data.map(item => item.defs ? item.defs[0] : "");
+      displayResults(word, results, definitions);
+      loadingMessage.textContent = "";
+    }
+
+    // === RENDERING & UI ===
+    function displayResults(word, results, definitions) {
+      resultsHeading.textContent = `Results for: ${word}`;
+      resultsTable.innerHTML = "";
+      noResults.textContent = "";
+      errorMessage.textContent = "";
+      if (results.length > 0) {
+        results.forEach((result, index) => {
+          const row = resultsTable.insertRow();
+          row.style.backgroundColor = colors[index % colors.length];
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          const cell3 = row.insertCell(2);
+
+          // Highlight the searched term in result
+          let regex = new RegExp(`(${word})`, "ig");
+          cell1.innerHTML = result.replace(regex, "<b>$1</b>");
+          cell2.textContent = definitions[index] || "";
+          cell3.innerHTML = `<button class="copy-btn" aria-label="Copy result" onclick="navigator.clipboard.writeText('${result.replace(/'/g,"\\'")}')">📋</button>`;
+        });
+      } else {
+        noResults.textContent = "No results found.";
+      }
+    }
+
+    function displayError(message) {
+      clearResults();
+      errorMessage.textContent = message.includes("Network")
+        ? "Network error. Please check your internet connection."
+        : "An error occurred: " + message;
+    }
+
+    function clearResults() {
+      resultsHeading.textContent = "";
+      resultsTable.innerHTML = "";
+      noResults.textContent = "";
+      errorMessage.textContent = "";
+      loadingMessage.textContent = "";
+    }
+
+    function clearSearchInput() {
+      searchInput.value = "";
+      clearButton.hidden = true;
+      clearResults();
+      searchInput.focus();
+    }
+
+    // === OPTIONAL: Restore previous search (on reload) ===
+    window.addEventListener("DOMContentLoaded", () => {
+      const lastWord = localStorage.getItem("dict_last_word");
+      if (lastWord) {
+        searchInput.value = lastWord;
+        handleInput(lastWord);
+      }
+    });
+    searchInput.addEventListener("input", () => {
+      localStorage.setItem("dict_last_word", searchInput.value);
+    });
+
+  </script>
+  <footer>
+    <p><a href="https://github.com/lixanalghaib/Thedict" style="color: #3498db;">Contribute to this project</a></p>
+  </footer>
+</body>
+</html>
